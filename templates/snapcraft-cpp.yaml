@@ -1,0 +1,49 @@
+name: ctrlx-{company}-{app}
+version: '1.0.0'
+summary: '{app} - ctrlX Data Layer Application (C++)'
+description: |
+  {description}
+  Provides real-time data via ctrlX Data Layer.
+base: core22
+confinement: strict
+grade: stable
+
+parts:
+  {app}:
+    plugin: cmake
+    source: .
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/usr/local
+    build-packages:
+      - build-essential
+      - cmake
+      - libctrlx-datalayer-dev   # From Bosch APT: https://nexus.boschrexroth.com
+      - libflatbuffers-dev
+      - flatbuffers-compiler
+    stage-packages:
+      - libzmq5
+      - libstdc++6
+    override-build: |
+      craftenv  # snapcraft 8.x helper
+      cmake $CRAFT_PART_SRC \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=$CRAFT_PART_INSTALL/usr/local
+      cmake --build . --parallel
+      cmake --install .
+
+apps:
+  {app}:
+    command: usr/local/bin/ctrlx-{company}-{app}
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - network
+      - network-bind
+      - ctrlx-datalayer
+
+plugs:
+  ctrlx-datalayer:
+    interface: content
+    content: ctrlx-datalayer
+    target: $SNAP_DATA/.datalayer
