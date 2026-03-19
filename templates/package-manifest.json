@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "services": {
+    "reverse_proxy": {
+      "url": "/app/ctrlx-{{company}}-{{app}}",
+      "websocket": true,
+      "unix_socket": "/var/snap/ctrlx-{{company}}-{{app}}/current/package-run/ctrlx-{{company}}-{{app}}/ctrlx-{{company}}-{{app}}.web.sock",
+      "access": "ctrlx-{{company}}-{{app}}.access"
+    }
+  },
+  "ports": [],
+  "licensing": {
+    "enabled": false,
+    "check_interval": 30
+  },
+  "resources": {
+    "ram": "50MB",
+    "storage": "20MB"
+  }
+}

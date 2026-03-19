@@ -1,0 +1,44 @@
+name: ctrlx-{{company}}-{{app}}
+version: '1.0.0'
+summary: {{app}} ctrlX Application
+description: |
+  {{description}}
+  Provides Data Layer nodes for real-time data exchange.
+base: core22
+confinement: strict
+grade: stable
+
+parts:
+  {{app}}:
+    plugin: python
+    source: .
+    python-packages:
+      - ctrlx-datalayer>=2.0
+      - flatbuffers
+    stage-packages:
+      - libzmq5
+    override-build: |
+      cp -r src/* ${SNAPCRAFT_PART_INSTALL}/
+      cp -r build-info ${SNAPCRAFT_PART_INSTALL}/
+      
+apps:
+  {{app}}:
+    command: bin/python3 $SNAP/src/main.py
+    daemon: simple
+    restart-condition: always
+    restart-delay: 10s
+    environment:
+      PYTHONPATH: $SNAP/src
+      SNAP_DATA: $SNAP_DATA
+      SNAP_COMMON: $SNAP_COMMON
+    plugs:
+      - network
+      - network-bind
+      - home
+      - ctrlx-datalayer
+
+plugs:
+  ctrlx-datalayer:
+    interface: content
+    content: ctrlx-datalayer
+    target: $SNAP_DATA/.datalayer
