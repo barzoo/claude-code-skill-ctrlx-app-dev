@@ -20,12 +20,13 @@ parts:
     plugin: python
     source: .
     python-packages:
-      - ctrlx-datalayer>=2.0
+      - ctrlx-datalayer>=2.4
       - flatbuffers
     stage-packages:
       - libzmq5  # Data Layer 依赖
     override-build: |
-      cp -r src/* ${SNAPCRAFT_PART_INSTALL}/
+      # snapcraft 8.x: use $CRAFT_PART_INSTALL instead of $SNAPCRAFT_PART_INSTALL
+      cp -r src/* ${CRAFT_PART_INSTALL}/
       
 apps:
   {app}:

@@ -13,6 +13,8 @@
 
 ### 技术规范检查
 
+- [ ] ctrlx-datalayer Python binding >= 2.4（或 C++/C# 对应版本）
+- [ ] snapcraft 版本 >= 8.x（检查: `snapcraft --version`）
 - [ ] Snap 名称符合 `ctrlx-{company}-{app}` 格式
 - [ ] 使用 `core22` 或 `core24` 基础镜像
 - [ ] `confinement: strict` 已设置

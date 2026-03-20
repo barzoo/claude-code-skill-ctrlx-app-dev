@@ -1,5 +1,7 @@
 # ctrlX App 开发概述
 
+> **当前基准版本**: ctrlX OS 2.x | ctrlX SDK 2.4.x | snapcraft 8.x | Ubuntu Core 22/24
+
 ## 什么是 ctrlX App
 
 ctrlX App 是基于 Ubuntu Core Snap 格式的工业自动化应用，运行在 Bosch Rexroth ctrlX CORE 控制系统上。
@@ -8,7 +10,7 @@ ctrlX App 是基于 Ubuntu Core Snap 格式的工业自动化应用，运行在 
 
 | 语言 | 适用场景 | 性能 | 开发速度 |
 |------|----------|------|----------|
-| **Python** | 数据处理、算法原型 | 中等 | ⭐⭐⭐⭐⭐ |
+| **Python** | 数据处理、算法原型 | 中等 | ⭐⭐⭐⭐⭐ | (ctrlx-datalayer>=2.4) |
 | **C++** | 实时控制、高性能 | 高 | ⭐⭐⭐ |
 | **.NET/C#** | 企业集成、HMI | 中高 | ⭐⭐⭐⭐ |
 
