@@ -1,8 +1,8 @@
-# Snap 打包配置详解
+# Snap Packaging Configuration
 
-## snapcraft.yaml 结构
+## snapcraft.yaml Structure
 
-### Python 模板（已参数化）
+### Python Template (Parameterized)
 
 ```yaml
 name: ctrlx-{company}-{app}
@@ -11,7 +11,7 @@ summary: {app} - ctrlX Data Layer Application
 description: |
   {description}
   Provides real-time data via ctrlX Data Layer.
-base: core22  # 或 core24
+base: core22  # or core24
 confinement: strict
 grade: stable
 
@@ -23,11 +23,11 @@ parts:
       - ctrlx-datalayer>=2.4
       - flatbuffers
     stage-packages:
-      - libzmq5  # Data Layer 依赖
+      - libzmq5  # Data Layer dependency
     override-build: |
       # snapcraft 8.x: use $CRAFT_PART_INSTALL instead of $SNAPCRAFT_PART_INSTALL
       cp -r src/* ${CRAFT_PART_INSTALL}/
-      
+
 apps:
   {app}:
     command: bin/python3 $SNAP/src/main.py
@@ -49,7 +49,8 @@ plugs:
     target: $SNAP_DATA/.datalayer
 ```
 
-### C++ 模板关键差异
+### C++ Template — Key Differences
+
 ```yaml
 parts:
   {app}:
@@ -60,16 +61,17 @@ parts:
       - libctrlx-datalayer-dev
     stage-packages:
       - libzmq5
-      
+
 apps:
   {app}:
-    command: usr/local/bin/{app}  # CMake install 目标
+    command: usr/local/bin/{app}  # CMake install target
 ```
 
-## build-info 配置
+## build-info Configuration
 
-#### package-manifest.json（关键）
-```JSON
+### package-manifest.json (Critical)
+
+```json
 {
   "version": "1.0",
   "services": {
@@ -80,9 +82,9 @@ apps:
       "access": "ctrlx-{company}-{app}.access"
     }
   },
-  "ports": [],  // 推荐为空，使用 Unix Socket
+  "ports": [],
   "licensing": {
-    "enabled": {true|false},
+    "enabled": true,
     "check_interval": 30,
     "url": "/.licensing/api/v1/capabilities/ctrlx-{company}-{app}"
   }
@@ -90,7 +92,8 @@ apps:
 ```
 
 ### slotplug-description.json
-```JSON
+
+```json
 {
   "description": "Minimal permissions for Data Layer access",
   "slots": [],
@@ -112,23 +115,24 @@ apps:
 }
 ```
 
-## 关键配置解释
+## Key Configuration Notes
 
-### Content Interface（ctrlx-datalayer）
+### Content Interface (ctrlx-datalayer)
 
-这是与 ctrlX 系统通信的 唯一授权方式：
-- content: 标识符，固定为 ctrlx-datalayer
-- target: 挂载点，应用内通过 $SNAP_DATA/.datalayer 访问
-- 自动挂载: 系统启动时自动映射 Data Layer Unix Socket
+This is the **only authorized mechanism** for communicating with the ctrlX system:
+- `content`: Fixed identifier — always `ctrlx-datalayer`
+- `target`: Mount point — the app accesses Data Layer via `$SNAP_DATA/.datalayer`
+- Auto-mount: The system automatically maps the Data Layer Unix Socket at startup
 
-### 反向代理配置
+### Reverse Proxy Configuration
 
-通过 package-manifest.json 的 reverse_proxy：
-- url: Web UI 访问路径，自动集成到 ctrlX OS 导航
-- unix_socket: 应用监听地址，Nginx 反向代理至此
-- websocket: 支持实时 WebSocket 通信
+Configured via `package-manifest.json → reverse_proxy`:
+- `url`: Web UI access path, automatically integrated into ctrlX OS navigation
+- `unix_socket`: The socket address the app listens on; Nginx proxies to this address
+- `websocket`: Enables real-time WebSocket communication
 
-### 安全加固
-- 禁用全局 slots: 不声明 system-observe 等敏感接口
-- 文件权限: Snap 自动限制文件系统访问（仅 $SNAP_DATA 可写）
-- 网络隔离: 通过 Unix Socket 替代 TCP，避免外部网络暴露
+### Security Hardening
+
+- No global slots: Do not declare sensitive interfaces such as `system-observe`
+- File permissions: Snap automatically restricts filesystem access (only `$SNAP_DATA` is writable)
+- Network isolation: Unix Socket replaces TCP to avoid exposing the app to the external network
