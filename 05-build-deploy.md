@@ -1,5 +1,76 @@
 # 构建与部署指南
 
+## 快速开发循环（推荐日常使用）
+
+> **一条命令完成**：构建 → 上传 → 验证运行状态
+
+### 前置配置（仅首次）
+
+```bash
+# Linux/macOS/WSL
+export CTRLX_HOST=192.168.1.1   # COREvirtual IP
+export CTRLX_USER=admin
+export CTRLX_PASS=your-password
+
+cp templates/dev-loop.sh scripts/dev-loop.sh
+chmod +x scripts/dev-loop.sh
+```
+
+```powershell
+# Windows PowerShell
+$env:CTRLX_HOST = "192.168.1.1"
+$env:CTRLX_USER = "admin"
+$env:CTRLX_PASS = "your-password"
+
+Copy-Item templates\dev-loop.ps1 scripts\dev-loop.ps1
+```
+
+### 每次迭代
+
+```bash
+# Linux/WSL — 构建 amd64（用于 COREvirtual）
+./scripts/dev-loop.sh --arch amd64
+
+# Windows PowerShell
+.\scripts\dev-loop.ps1 -Arch amd64
+
+# ARM64（物理 ctrlX CORE）
+./scripts/dev-loop.sh --arch arm64
+```
+
+### 脚本输出示例
+
+```
+▶ [1/5] Building snap for amd64...
+  Built: ctrlx-myco-myapp_1.0.0_amd64.snap
+▶ [2/5] Authenticating with 192.168.1.1...
+  Token obtained
+▶ [3/5] Uploading ctrlx-myco-myapp_1.0.0_amd64.snap...
+  Uploaded
+▶ [4/5] Waiting for installation (max 120s)...
+  State: Installing (0 s)
+  State: Running (9 s)
+▶ [5/5] Fetching recent logs...
+  [2026-03-19T10:00:01] [ctrlx-myco-myapp] Registered: myco/myapp/sensor/value
+  [2026-03-19T10:00:01] [ctrlx-myco-myapp] Running. Press Ctrl+C to stop.
+
+✓ Dev loop complete in 47s
+  App 'ctrlx-myco-myapp' is Running on 192.168.1.1
+```
+
+### ctrlX REST API 认证说明
+
+```bash
+# 手动获取 token（调试用）
+curl -sk -X POST \
+  "https://${CTRLX_HOST}/identity-manager/api/v1/auth/token" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"admin","password":"your-password"}'
+# 返回: {"access_token": "eyJ...", "token_type": "Bearer"}
+```
+
+---
+
 ## 构建策略选择
 
 ### 策略 A: Docker 构建（Windows/macOS/ Linux 通用）
