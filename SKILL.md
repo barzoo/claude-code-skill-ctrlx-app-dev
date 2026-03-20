@@ -41,8 +41,75 @@ Example response (Phase 1):
 3. For Flatbuffers usage, refer to the Schema Design section in chapter 1
 
 ### `/ctrlx-app-dev build [--arch amd64|arm64]`
-1. Read the "Fast Dev Loop" section in @05-build-deploy.md (preferred)
-2. If dev-loop script is not set up, provide the Docker build command
+
+**Step 1: Detect dev-loop script**
+
+Check whether `scripts/dev-loop.sh` (Linux/macOS/WSL) or `scripts/dev-loop.ps1` (Windows) exists in the project root.
+
+**If neither exists → First-Time Setup Flow:**
+
+Ask the user which shell they are using:
+> "No dev-loop script found. Which environment are you running in?
+> A. Linux / macOS / WSL (bash)
+> B. Windows PowerShell"
+
+Then guide them through the one-time setup:
+
+```bash
+# Option A — bash
+cp <skill-path>/templates/dev-loop.sh scripts/dev-loop.sh
+chmod +x scripts/dev-loop.sh
+
+export CTRLX_HOST=<IP of your COREvirtual VM>
+export CTRLX_USER=admin
+export CTRLX_PASS=<your password>
+```
+
+```powershell
+# Option B — PowerShell
+Copy-Item <skill-path>\templates\dev-loop.ps1 scripts\dev-loop.ps1
+
+$env:CTRLX_HOST = "<IP of your COREvirtual VM>"
+$env:CTRLX_USER = "admin"
+$env:CTRLX_PASS = "<your password>"
+```
+
+Then verify connectivity before proceeding:
+> "Run the following to confirm your VM is reachable:
+> `ping $CTRLX_HOST` (or `Test-Connection $env:CTRLX_HOST` on PowerShell)
+>
+> If it times out, check:
+> - COREvirtual is running in ctrlX WORKS
+> - Developer mode is enabled in ctrlX OS → Settings → App Management
+> - Your host and VM are on the same network adapter (Host-Only or Bridged)"
+
+Once connectivity is confirmed, continue to the run step below.
+
+**If script exists → Ready-to-Run Flow:**
+
+Check that the three required environment variables are set (`CTRLX_HOST`, `CTRLX_USER`, `CTRLX_PASS`). If any are missing, prompt for them before continuing.
+
+Then run the appropriate script for the detected arch (default `amd64`):
+
+```bash
+# bash
+./scripts/dev-loop.sh --arch amd64
+
+# PowerShell
+.\scripts\dev-loop.ps1 -Arch amd64
+```
+
+Expected output ends with:
+```
+✓ Dev loop complete in <N>s
+  App '<snap-name>' is Running on <CTRLX_HOST>
+```
+
+If the script exits with an error, read the failure line and route to diagnostic mode (see Diagnostic Mode section).
+
+**If Docker is not available → Fallback:**
+
+If the user cannot run Docker (required by the dev-loop script for the build step), refer them to Strategy B in @05-build-deploy.md (App Build Environment).
 
 ### `/ctrlx-app-dev compliance`
 1. Load the Category 1/2/3 checklists from @06-compliance.md
