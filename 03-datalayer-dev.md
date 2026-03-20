@@ -1,34 +1,34 @@
-# Data Layer 开发指南
+# Data Layer Development Guide
 
-> **SDK 基准**: ctrlx-datalayer >= 2.4 (Python) | comm.datalayer >= 2.4 (C++) | Datalayer >= 2.4 (.NET)
+> **SDK baseline**: ctrlx-datalayer >= 2.4 (Python) | comm.datalayer >= 2.4 (C++) | Datalayer >= 2.4 (.NET)
 
-## 架构模式
+## Architecture
 
-ctrlX Data Layer 采用**发布-订阅**模式，支持两种角色：
+ctrlX Data Layer uses a **publish-subscribe** pattern with two roles:
 
-- **Provider**（数据提供者）：注册节点，响应读/写请求
-- **Consumer**（数据消费者）：订阅节点变更或批量读取
+- **Provider**: Registers nodes and responds to read/write requests
+- **Consumer**: Subscribes to node changes or performs bulk reads
 
 ---
 
-## 1. Schema 设计（Flatbuffers）
+## 1. Schema Design (Flatbuffers)
 
-创建 `schema/{app}.fbs`：
+Create `schema/{app}.fbs`:
 
 ```flatbuffers
 namespace {company}.{app};
 
 table SensorReading {
-  timestamp: ulong;   // Unix 时间戳 (ms)
-  value:     double;  // 传感器值
-  unit:      string;  // 单位 (e.g., "celsius")
+  timestamp: ulong;   // Unix timestamp (ms)
+  value:     double;  // Sensor value
+  unit:      string;  // Unit (e.g., "celsius")
   quality:   int;     // 0=good, 1=uncertain, 2=bad
 }
 
 root_type SensorReading;
 ```
 
-编译：
+Compile:
 ```bash
 flatc --python -o src/  schema/{app}.fbs   # Python
 flatc --cpp    -o src/  schema/{app}.fbs   # C++
@@ -37,12 +37,12 @@ flatc --csharp -o src/  schema/{app}.fbs   # C#
 
 ---
 
-## 2. Provider 实现
+## 2. Provider Implementation
 
 ### Python
 
 ```python
-# SDK 2.4.x — 完整初始化序列
+# SDK 2.4.x — full initialization sequence
 from ctrlx_datalayer import system as dl_system
 from ctrlx_datalayer.provider_node import ProviderNode, NodeCallback
 from ctrlx_datalayer.variant import Variant
@@ -66,7 +66,7 @@ node = ProviderNode(NodeCallback(on_read=on_read, on_write=on_write))
 provider.register_node("{company}/{app}/sensor/value", node)
 ```
 
-完整示例（含优雅关闭）参见 @templates/provider-template.py
+Full example (with graceful shutdown): see @templates/provider-template.py
 
 ### C++
 
@@ -100,7 +100,7 @@ auto node = std::make_shared<SensorNode>();
 provider->registerNode("{company}/{app}/sensor/value", node.get());
 ```
 
-完整示例（含 RAII 关闭）参见 @templates/provider-template-cpp.cpp
+Full example (with RAII shutdown): see @templates/provider-template-cpp.cpp
 
 ### C#
 
@@ -127,13 +127,13 @@ class SensorNode : IProviderNode {
 provider.RegisterNode("{company}/{app}/sensor/value", new SensorNode());
 ```
 
-完整示例（含 async/await 关闭）参见 @templates/provider-template-csharp.cs
+Full example (with async/await shutdown): see @templates/provider-template-csharp.cs
 
 ---
 
-## 3. Consumer 实现
+## 3. Consumer Implementation
 
-### 订阅（实时监控）
+### Subscription (real-time monitoring)
 
 **Python**
 ```python
@@ -182,7 +182,7 @@ using var sub = client.CreateSubscription(props, items => {
 sub.Subscribe(new[] { "{company}/{app}/sensor/value" });
 ```
 
-### 批量读取（配置读取）
+### Bulk Read (for configuration)
 
 **Python**
 ```python
@@ -196,7 +196,7 @@ for r in results:
 
 ---
 
-## 4. 错误恢复（自动重连）
+## 4. Error Recovery (Auto-Reconnect)
 
 **Python**
 ```python
@@ -214,37 +214,37 @@ def connect_with_retry(system, max_retries=10, delay=2.0):
 
 ---
 
-## 5. 优雅关闭顺序
+## 5. Graceful Shutdown Sequence
 
-正确关闭顺序（必须严格遵守，否则可能导致 Data Layer 节点残留）：
+Correct shutdown sequence (must be followed strictly to avoid orphaned Data Layer nodes):
 
 ```
-1. 停止业务逻辑循环（设置 _running = False）
-2. unregister_node() / unregisterNode() — 逐个注销节点
+1. Stop business logic loop (set _running = False)
+2. unregister_node() / unregisterNode() — unregister each node
 3. provider.stop() / provider->stop()
 4. system.stop() / system.stop()
 ```
 
 ---
 
-## 6. 性能最佳实践
+## 6. Performance Best Practices
 
-| 场景 | 建议 |
+| Scenario | Recommendation |
 |---|---|
-| 传感器实时数据 | 订阅间隔 100ms |
-| 状态监控 | 订阅间隔 1000ms |
-| 配置读取 | 批量读取，非循环单读 |
-| 连接复用 | 全局维护单个 Provider/Client 实例 |
-| 写入频率 | 避免 >10Hz 写入，延长闪存寿命 |
+| Sensor real-time data | Use 100 ms subscription interval |
+| Status monitoring | Use 1000 ms subscription interval |
+| Configuration reads | Use bulk read, not per-item loop |
+| Connection reuse | Maintain a single global Provider/Client instance |
+| Write frequency | Avoid writes faster than 10 Hz to extend flash lifetime |
 
 ---
 
-## 7. 故障排除
+## 7. Troubleshooting
 
-| 症状 | 原因 | 解决 |
+| Symptom | Cause | Fix |
 |---|---|---|
-| Provider 创建返回 None | IPC Socket 未就绪 | 重试连接，检查 ctrlx-datalayer plug 是否已连接 |
-| 节点注册失败 | 路径已被占用 | 使用 Data Layer Browser 检查现有节点 |
-| 读取超时 | Flatbuffers schema 版本不匹配 | 重新编译 .fbs，确保客户端和服务端使用同一 schema |
-| 订阅无回调 | 路径拼写错误 | 在 Data Layer Browser 中验证节点路径 |
-| 优雅关闭卡住 | 未调用 unregister_node | 确保关闭顺序正确（见第5节） |
+| Provider creation returns None | IPC socket not ready | Retry connection; verify the ctrlx-datalayer plug is connected |
+| Node registration fails | Path already registered | Check existing nodes in Data Layer Browser |
+| Read timeout | Flatbuffers schema version mismatch | Recompile .fbs; ensure client and server use the same schema |
+| Subscription receives no callbacks | Incorrect node path | Verify node path in Data Layer Browser |
+| Graceful shutdown hangs | unregister_node not called | Follow the correct shutdown sequence (see section 5) |
