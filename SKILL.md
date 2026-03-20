@@ -1,85 +1,85 @@
 ---
 name: ctrlx-app-dev
-description: 模块化 ctrlX App 开发助手（SDK 2.4.x）。支持项目初始化、Data Layer 实现、Snap 打包、构建部署及合规检查。含智能阶段检测和问题诊断。
+description: Modular ctrlX App development assistant (SDK 2.4.x). Supports project initialization, Data Layer implementation, Snap packaging, build/deploy, and compliance checks. Includes smart phase detection and diagnostic mode.
 argument-hint: [init|datalayer|snap|build|compliance|overview|diagnose]
 ---
 
-# ctrlX App 开发助手
+# ctrlX App Development Assistant
 
-## 启动时：自动检测项目阶段
+## On Startup: Auto-Detect Project Phase
 
-**每次调用时，先扫描当前目录，判断阶段并主动提示：**
+**Each time the skill is invoked, scan the current directory, determine the development phase, and provide proactive guidance:**
 
 ```
-检测逻辑（按优先级）：
-1. 无 snap/ 目录             → 阶段: 未初始化 → 提示运行 init
-2. 有 snap/ 且缺 build-info/ → 阶段: 配置缺失 → 警告并给修复步骤
-3. 有 snap/ 但无 *.snap 文件 → 阶段: 开发中   → 询问当前在做什么
-4. 有 *.snap 文件            → 阶段: 待部署   → 引导开发循环
+Detection logic (priority order):
+1. No snap/ directory              → Phase: Uninitialized → Prompt to run init
+2. Has snap/ but missing build-info/ → Phase: Config missing → Warn and provide fix steps
+3. Has snap/ but no *.snap files   → Phase: In development  → Ask what user is working on
+4. Has *.snap files                → Phase: Ready to deploy → Guide through dev loop
 ```
 
-示例响应（阶段 1）：
-> "检测到当前目录没有 snap/ 文件夹，项目尚未初始化。
-> 运行以下命令开始：`/ctrlx-app-dev init my-app --lang python`"
+Example response (Phase 1):
+> "No snap/ directory found. This project has not been initialized yet.
+> Run the following command to get started: `/ctrlx-app-dev init my-app --lang python`"
 
 ---
 
-## 命令路由
+## Command Routing
 
 ### `/ctrlx-app-dev init [name] --lang [python|cpp|csharp]`
-1. 读取 @02-project-scaffold.md 中的目录结构规范
-2. 根据语言选择对应模板：
+1. Read the directory structure spec from @02-project-scaffold.md
+2. Select templates based on language:
    - Python: @templates/snapcraft-python.yaml + @templates/provider-template.py
    - C++: @templates/snapcraft-cpp.yaml + @templates/provider-template-cpp.cpp + @templates/CMakeLists.txt
    - C#: @templates/snapcraft-csharp.yaml + @templates/provider-template-csharp.cs
-3. 复制 @templates/package-manifest.json 到 build-info/
-4. 按 @02-project-scaffold.md 的 "初始化后步骤" 引导用户
+3. Copy @templates/package-manifest.json to build-info/
+4. Guide user through "Post-initialization steps" in @02-project-scaffold.md
 
 ### `/ctrlx-app-dev datalayer [add-node|provider|consumer]`
-1. 查阅 @03-datalayer-dev.md（SDK 2.4.x 版本）
-2. 根据用户语言（Python/C++/C#）选择对应代码段
-3. 如需 Flatbuffers，参考第1节的 Schema 设计
+1. Consult @03-datalayer-dev.md (SDK 2.4.x)
+2. Select the code section matching the user's language (Python/C++/C#)
+3. For Flatbuffers usage, refer to the Schema Design section in chapter 1
 
 ### `/ctrlx-app-dev build [--arch amd64|arm64]`
-1. 读取 @05-build-deploy.md 的 "快速开发循环" 章节（首选）
-2. 如无 dev-loop 脚本，提供 Docker 构建命令
+1. Read the "Fast Dev Loop" section in @05-build-deploy.md (preferred)
+2. If dev-loop script is not set up, provide the Docker build command
 
 ### `/ctrlx-app-dev compliance`
-1. 加载 @06-compliance.md 的 Category 1/2/3 检查清单
-2. 扫描当前项目文件，逐项核对
-3. 输出合规报告（通过/失败/缺失）
+1. Load the Category 1/2/3 checklists from @06-compliance.md
+2. Scan current project files and verify each item
+3. Output compliance report (pass/fail/missing)
 
 ### `/ctrlx-app-dev diagnose`
-触发诊断模式（见下方）
+Trigger diagnostic mode (see below)
 
 ---
 
-## 诊断模式
+## Diagnostic Mode
 
-当用户描述问题（而非命令格式）时，**先问 2 个诊断问题，再给出针对性答案**：
+When the user describes a problem (rather than entering a command), **ask 2 diagnostic questions before providing an answer**:
 
-**问题 1：确认症状**
-> "你遇到的是哪种情况？
-> A. 节点在 Data Layer Browser 中不可见
-> B. 节点可见但读取返回错误码
-> C. 数据格式错误（Flatbuffers 解析失败）
-> D. 构建或打包失败"
+**Question 1: Confirm the symptom**
+> "Which situation are you experiencing?
+> A. Node is not visible in Data Layer Browser
+> B. Node is visible but read returns an error code
+> C. Data format error (Flatbuffers deserialization failed)
+> D. Build or packaging failure"
 
-**问题 2：确认环境**
-> "你在哪个环境运行？
-> A. COREvirtual（本地虚拟机）
-> B. 物理 ctrlX CORE 设备
-> C. 本地开发环境（非 snap）"
+**Question 2: Confirm the environment**
+> "Which environment are you running in?
+> A. COREvirtual (local virtual machine)
+> B. Physical ctrlX CORE device
+> C. Local development environment (not inside a snap)"
 
-收到回答后，直接给出针对该症状+环境的具体步骤，参考 @03-datalayer-dev.md 第7节或 @05-build-deploy.md 故障排除表。
+After receiving answers, provide targeted steps for that symptom + environment combination. Reference @03-datalayer-dev.md section 7 or the troubleshooting table in @05-build-deploy.md.
 
 ---
 
-## 核心约束（强制执行）
+## Core Constraints (Enforced)
 
-- **SDK 版本**: ctrlx-datalayer >= 2.4 (Python) | comm.datalayer >= 2.4 (C++) | Datalayer >= 2.4 (.NET)
-- **命名规范**: `ctrlx-{company}-{app}_{version}_{arch}.snap`
-- **基础镜像**: `core22` 或 `core24`，strict confinement
-- **通信方式**: Unix Socket（IPC），非 TCP 端口
-- **资源限制**: RAM < 75MB, Snap < 100MB
-- **必需文件**: package-manifest.json, manual.md, test-setup.md, release-notes.md
+- **SDK version**: ctrlx-datalayer >= 2.4 (Python) | comm.datalayer >= 2.4 (C++) | Datalayer >= 2.4 (.NET)
+- **Naming convention**: `ctrlx-{company}-{app}_{version}_{arch}.snap`
+- **Base image**: `core22` or `core24`, strict confinement
+- **Communication**: Unix Socket (IPC), not TCP ports
+- **Resource limits**: RAM < 75 MB, Snap < 100 MB
+- **Required files**: package-manifest.json, manual.md, test-setup.md, release-notes.md
