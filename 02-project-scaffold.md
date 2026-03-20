@@ -40,8 +40,54 @@ Python 项目:
 - 配置: @templates/snapcraft-python.yaml → snap/snapcraft.yaml
 
 C++ 项目:
+- 主文件: @templates/provider-template-cpp.cpp → src/main.cpp
+- 构建: @templates/CMakeLists.txt → CMakeLists.txt
 - 配置: @templates/snapcraft-cpp.yaml → snap/snapcraft.yaml
-- 额外创建: CMakeLists.txt
+
+C++ 依赖安装（在 App Build Environment 中）:
+```bash
+# 添加 Bosch APT 仓库
+curl -s https://nexus.boschrexroth.com/repository/apt-hosted/gpg.key | sudo apt-key add -
+echo "deb https://nexus.boschrexroth.com/repository/apt-hosted focal main" \
+  | sudo tee /etc/apt/sources.list.d/bosch.list
+sudo apt update
+sudo apt install libctrlx-datalayer-dev libflatbuffers-dev flatbuffers-compiler -y
+```
+
+.NET 项目:
+- 主文件: @templates/provider-template-csharp.cs → src/Program.cs
+- 配置: @templates/snapcraft-csharp.yaml → snap/snapcraft.yaml
+- 额外创建: `{app}.csproj`（见下方模板）
+
+.NET csproj 模板:
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <AssemblyName>ctrlx-{company}-{app}</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Bosch NuGet feed: https://nexus.boschrexroth.com/repository/nuget-hosted/ -->
+    <PackageReference Include="Datalayer" Version="2.4.*" />
+    <PackageReference Include="Google.FlatBuffers" Version="24.*" />
+  </ItemGroup>
+</Project>
+```
+
+NuGet.Config（放在项目根目录）:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="bosch-nexus"
+         value="https://nexus.boschrexroth.com/repository/nuget-hosted/" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+</configuration>
+```
 
 ## Step 3: 填充元数据
 编辑以下文件的占位符：
