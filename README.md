@@ -1,57 +1,59 @@
-# ctrlX App 开发 Skill
+[中文文档](README-cn.md) | English
 
-> 用于 [Claude Code](https://claude.ai/code) 的 ctrlX CORE 工业应用开发助手
-> 基准版本：**ctrlX OS 2.x | ctrlX SDK 2.4.x | snapcraft 8.x**
+# ctrlX App Development Skill
 
-## 这是什么？
+> A [Claude Code](https://claude.ai/code) skill for building Bosch Rexroth ctrlX CORE industrial applications
+> Baseline: **ctrlX OS 2.x | ctrlX SDK 2.4.x | snapcraft 8.x**
 
-帮你快速开发符合 Bosch Rexroth 标准的 ctrlX CORE 工业应用，覆盖从项目初始化到发布的完整流程。
+## What is this?
 
-**核心特性：**
-- 智能阶段检测：自动识别项目所处开发阶段并主动引导
-- 诊断模式：描述问题即可获得针对性解决步骤
-- 三语言支持：Python / C++ / .NET 模板完整对称
-- 一键开发循环：构建 → 上传 → 验证，自动化完成
+A Claude Code skill that guides you through the full lifecycle of ctrlX CORE app development — from project scaffolding to publishing — following Bosch Rexroth standards.
 
-## 安装（30秒）
+**Key features:**
+- **Smart phase detection**: Automatically identifies your current development phase and provides proactive guidance
+- **Diagnostic mode**: Describe your problem in plain language and get targeted, step-by-step resolution
+- **Three-language support**: Complete, symmetric templates for Python, C++, and .NET
+- **One-command dev loop**: Build → Upload → Verify in a single script (~30–60 seconds)
+
+## Installation
 
 ```bash
-# 全局安装（所有项目可用）
+# Global install (available in all projects)
 git clone https://github.com/barzoo/claude-code-skill-ctrlx-app-dev \
   ~/.claude/skills/ctrlx-app-dev
 ```
 
 ```bash
-# 项目级安装（仅当前项目）
+# Project-level install (current project only)
 git clone https://github.com/barzoo/claude-code-skill-ctrlx-app-dev \
   .claude/skills/ctrlx-app-dev
 ```
 
-## 5 分钟上手
+## 5-Minute Quickstart
 
-### 1. 创建项目
+### 1. Create a project
 
 ```
 /ctrlx-app-dev init my-sensor-app --lang python
 ```
 
-支持语言：`python` | `cpp` | `csharp`
+Supported languages: `python` | `cpp` | `csharp`
 
-### 2. 实现 Data Layer 节点
+### 2. Implement a Data Layer node
 
 ```
 /ctrlx-app-dev datalayer add-node
 ```
 
-告诉 Claude 你的需求，例如：
+Describe what you need, for example:
 ```
-添加一个温度传感器节点，每秒采集数据，范围 0-100 度
+Add a temperature sensor node that samples data every second, range 0–100 °C
 ```
 
-### 3. 一键构建并部署到 COREvirtual
+### 3. Build and deploy to COREvirtual in one command
 
 ```bash
-# 首次配置（仅需一次）
+# One-time setup
 export CTRLX_HOST=192.168.1.1
 export CTRLX_USER=admin
 export CTRLX_PASS=your-password
@@ -62,59 +64,59 @@ cp templates/dev-loop.sh scripts/dev-loop.sh && chmod +x scripts/dev-loop.sh
 /ctrlx-app-dev build --arch amd64
 ```
 
-脚本自动完成：构建 snap → 上传到设备 → 等待安装 → 抓取日志，全程约 30-60 秒。
+The script handles everything: build snap → upload to device → wait for install → fetch logs. Typically completes in 30–60 seconds.
 
-### 4. 合规检查（发布前必做）
+### 4. Run compliance checks (required before publishing)
 
 ```
 /ctrlx-app-dev compliance
 ```
 
-### 5. 问题诊断
+### 5. Diagnose issues
 
 ```
 /ctrlx-app-dev diagnose
 ```
 
-或直接描述问题，skill 会先问 2 个诊断问题，再给出针对性步骤。
+Or simply describe the problem in plain text. The skill will ask two diagnostic questions, then provide targeted resolution steps.
 
-## 命令速查
+## Command Reference
 
-| 命令 | 作用 |
-|------|------|
-| `init [name] --lang python\|cpp\|csharp` | 创建项目 |
-| `datalayer add-node\|provider\|consumer` | Data Layer 开发 |
-| `build [--arch amd64\|arm64]` | 构建并部署 |
-| `compliance` | 合规检查 |
-| `diagnose` | 问题诊断模式 |
-| `overview` | 架构总览 |
+| Command | Description |
+|---------|-------------|
+| `init [name] --lang python\|cpp\|csharp` | Scaffold a new project |
+| `datalayer add-node\|provider\|consumer` | Data Layer development |
+| `build [--arch amd64\|arm64]` | Build and deploy |
+| `compliance` | Run compliance checklist |
+| `diagnose` | Enter diagnostic mode |
+| `overview` | Architecture overview |
 
-## 文件结构
+## File Structure
 
 ```
 ctrlx-app-dev/
-├── SKILL.md                    # 主入口（阶段检测 + 命令路由 + 诊断模式）
-├── 01-overview.md              # 架构概述与技术栈选择
-├── 02-project-scaffold.md      # 项目初始化（Python / C++ / .NET）
-├── 03-datalayer-dev.md         # Data Layer 开发指南（SDK 2.4.x，三语言）
-├── 04-snap-config.md           # Snap 打包配置详解
-├── 05-build-deploy.md          # 构建部署（含快速开发循环）
-├── 06-compliance.md            # 合规检查清单
+├── SKILL.md                    # Entry point (phase detection, routing, diagnostics)
+├── 01-overview.md              # Architecture overview and tech stack
+├── 02-project-scaffold.md      # Project initialization (Python / C++ / .NET)
+├── 03-datalayer-dev.md         # Data Layer development guide (SDK 2.4.x, 3 languages)
+├── 04-snap-config.md           # Snap packaging configuration
+├── 05-build-deploy.md          # Build and deploy (includes fast dev loop)
+├── 06-compliance.md            # Compliance checklist
 └── templates/
-    ├── provider-template.py        # Python Provider 模板（SDK 2.4.x）
-    ├── provider-template-cpp.cpp   # C++ Provider 模板
-    ├── provider-template-csharp.cs # C# Provider 模板
-    ├── snapcraft-python.yaml       # Python Snap 配置模板
-    ├── snapcraft-cpp.yaml          # C++ Snap 配置模板
-    ├── snapcraft-csharp.yaml       # C# Snap 配置模板
-    ├── CMakeLists.txt              # C++ 构建文件模板
-    ├── package-manifest.json       # 反向代理 + 许可证配置
-    ├── dev-loop.sh                 # 开发循环脚本（Linux/WSL）
-    └── dev-loop.ps1                # 开发循环脚本（Windows PowerShell）
+    ├── provider-template.py        # Python Provider template (SDK 2.4.x)
+    ├── provider-template-cpp.cpp   # C++ Provider template
+    ├── provider-template-csharp.cs # C# Provider template
+    ├── snapcraft-python.yaml       # Python Snap config template
+    ├── snapcraft-cpp.yaml          # C++ Snap config template
+    ├── snapcraft-csharp.yaml       # C# Snap config template
+    ├── CMakeLists.txt              # C++ build file template
+    ├── package-manifest.json       # Reverse proxy + license config
+    ├── dev-loop.sh                 # Dev loop script (Linux/WSL)
+    └── dev-loop.ps1                # Dev loop script (Windows PowerShell)
 ```
 
-## 参考资料
+## References
 
-- [ctrlX Automation SDK 官方文档](https://boschrexroth.github.io/ctrlx-automation-sdk/)
-- [snapcraft 8.x 文档](https://snapcraft.io/docs)
-- [Flatbuffers 文档](https://google.github.io/flatbuffers/)
+- [ctrlX Automation SDK Documentation](https://boschrexroth.github.io/ctrlx-automation-sdk/)
+- [snapcraft 8.x Documentation](https://snapcraft.io/docs)
+- [Flatbuffers Documentation](https://google.github.io/flatbuffers/)
