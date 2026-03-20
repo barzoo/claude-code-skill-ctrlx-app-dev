@@ -1,85 +1,83 @@
-# 合规性检查清单
+# Compliance Checklist
 
-## Category 1（基础合规 - 必须）
+## Category 1 (Baseline Compliance — Required)
 
-### 文件完整性检查
+### File Integrity
 
-- [ ] `snap/snapcraft.yaml` 存在且语法正确
-- [ ] `build-info/package-manifest.json` 存在且包含 reverse_proxy 配置
-- [ ] `build-info/slotplug-description.json` 描述所有接口
-- [ ] `docs/manual.md` 包含安装、配置、故障排除章节
-- [ ] `docs/test-setup.md` 描述至少一个测试场景
-- [ ] `docs/release-notes.md` 包含版本变更日志
+- [ ] `snap/snapcraft.yaml` exists and passes syntax validation
+- [ ] `build-info/package-manifest.json` exists and contains a `reverse_proxy` configuration
+- [ ] `build-info/slotplug-description.json` describes all interfaces
+- [ ] `docs/manual.md` includes installation, configuration, and troubleshooting sections
+- [ ] `docs/test-setup.md` describes at least one test scenario
+- [ ] `docs/release-notes.md` includes a version changelog
 
-### 技术规范检查
+### Technical Specification
 
-- [ ] ctrlx-datalayer Python binding >= 2.4（或 C++/C# 对应版本）
-- [ ] snapcraft 版本 >= 8.x（检查: `snapcraft --version`）
-- [ ] Snap 名称符合 `ctrlx-{company}-{app}` 格式
-- [ ] 使用 `core22` 或 `core24` 基础镜像
-- [ ] `confinement: strict` 已设置
-- [ ] 无全局 slots 声明
-- [ ] Plugs 仅限: network, network-bind, home, ctrlx-datalayer
-- [ ] Unix Socket 路径配置正确（非 TCP 端口优先）
+- [ ] ctrlx-datalayer Python binding >= 2.4 (or equivalent C++/C# version)
+- [ ] snapcraft version >= 8.x (check: `snapcraft --version`)
+- [ ] Snap name follows the `ctrlx-{company}-{app}` format
+- [ ] Uses `core22` or `core24` as the base image
+- [ ] `confinement: strict` is set
+- [ ] No global slots declared
+- [ ] Plugs limited to: `network`, `network-bind`, `home`, `ctrlx-datalayer`
+- [ ] Unix Socket path is configured correctly (TCP ports avoided)
 
-### 资源限制验证
+### Resource Limits
 
-- [ ] 应用启动后 RAM < 75MB（使用 `top` 验证）
-- [ ] Snap 包大小 < 100MB（使用 `ls -lh *.snap` 验证）
-- [ ] CPU 占用 < 5% 平均负载
+- [ ] RAM < 75 MB after app startup (verify with `top`)
+- [ ] Snap package size < 100 MB (verify with `ls -lh *.snap`)
+- [ ] CPU usage < 5% average load
 
-## Category 2（高级功能 - 如使用）
+## Category 2 (Advanced Features — If Used)
 
-### 许可证集成（如启用 licensing）
+### License Integration (if licensing is enabled)
 
-- [ ] `package-manifest.json` 中 licensing.enabled = true
-- [ ] 应用启动时调用 License Manager API
-- [ ] 无许可证时显示友好错误提示（非崩溃）
+- [ ] `package-manifest.json` has `licensing.enabled = true`
+- [ ] App calls the License Manager API on startup
+- [ ] Displays a friendly error message when license is absent (no crash)
 
-### Web UI（如提供）
+### Web UI (if provided)
 
-- [ ] 通过反向代理暴露（非直接端口）
-- [ ] 使用 HTTPS/WSS 通信
-- [ ] 集成 ctrlX OS 导航栏
+- [ ] Exposed through the reverse proxy (not a direct port)
+- [ ] Uses HTTPS/WSS communication
+- [ ] Integrated into the ctrlX OS navigation bar
 
-### 数据持久化
+### Data Persistence
 
-- [ ] 配置文件存储于 `$SNAP_COMMON`（跨版本保留）
-- [ ] 临时数据存储于 `$SNAP_DATA`（版本隔离）
-- [ ] 避免频繁写入（延长闪存寿命）
+- [ ] Configuration files stored in `$SNAP_COMMON` (preserved across upgrades)
+- [ ] Transient data stored in `$SNAP_DATA` (version-isolated)
+- [ ] Avoid frequent writes to extend flash storage lifetime
 
-## Category 3（企业级 - 可选）
+## Category 3 (Enterprise — Optional)
 
-- [ ] 支持 Solution 备份/恢复
-- [ ] 多语言支持（i18n）
-- [ ] 详细审计日志
-- [ ] 性能监控指标暴露
+- [ ] Supports Solution backup/restore
+- [ ] Multi-language support (i18n)
+- [ ] Detailed audit logging
+- [ ] Exposes performance monitoring metrics
 
-## 自动化检查脚本
-
-提供以下检查命令：
+## Automated Checks
 
 ```bash
-# 检查文件结构
+# Verify file structure
 ls -la snap/snapcraft.yaml build-info/*.json docs/*.md
 
-# 验证 Snap 语法
+# Validate Snap syntax
 snapcraft lint
 
-# 检查资源占用（安装后运行）
-ps aux | grep {app-name}  # 查看内存
-du -sh /var/snap/{app-name}/  # 查看存储
+# Check resource usage (run after installation)
+ps aux | grep {app-name}          # Memory
+du -sh /var/snap/{app-name}/      # Storage
 
-# 验证接口连接
+# Verify interface connections
 snap connections {app-name}
 ```
 
-## 签名与发布
+## Signing and Publishing
 
-### 最终检查:
-- [ ] 已通过 Bosch Rexroth 官方签名
-- [ ] 版本号符合语义化版本（SemVer）
-- [ ] 发布说明包含兼容性信息
+### Final Checks:
+- [ ] Snap has been signed by Bosch Rexroth
+- [ ] Version number follows Semantic Versioning (SemVer)
+- [ ] Release notes include compatibility information
 
-### 提交前确认:
-所有 Category 1 项必须通过，Category 2 根据功能需求选择。
+### Pre-submission Confirmation:
+All Category 1 items must pass. Category 2 items are required only if the corresponding feature is used.
