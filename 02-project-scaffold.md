@@ -1,52 +1,55 @@
-# 项目初始化指南
+# Project Scaffold Guide
 
-## 目录结构规范
+## Directory Structure
 
-创建项目时必须严格遵循以下结构：
+All projects must strictly follow this structure:
+
 ```
 {app-name}/
 ├── snap/
-│   └── snapcraft.yaml          # Snap 打包定义（见 @04-snap-config.md）
+│   └── snapcraft.yaml          # Snap packaging definition (see @04-snap-config.md)
 ├── src/
-│   ├── main.py                 # 应用入口（模板见 templates/）
-│   └── helper/                 # 辅助模块
+│   ├── main.py                 # Application entry point (see templates/)
+│   └── helper/                 # Helper modules
 ├── schema/
-│   └── {app}.fbs               # Flatbuffers schema（如使用 Data Layer）
-├── build-info/                 # 构建元数据（必需）
-│   ├── package-manifest.json   # 反向代理、许可证配置
+│   └── {app}.fbs               # Flatbuffers schema (if using Data Layer)
+├── build-info/                 # Build metadata (required)
+│   ├── package-manifest.json   # Reverse proxy and license configuration
 │   ├── slotplug-description.json
-│   ├── portlist-description.json   # 推荐为空列表
+│   ├── portlist-description.json   # Recommended: empty list
 │   └── unixsocket-description.json
-├── docs/                       # 文档（必需，用于合规）
-│   ├── manual.md               # 用户手册模板
-│   ├── test-setup.md           # 测试场景
-│   └── release-notes.md        # 发布说明
+├── docs/                       # Documentation (required for compliance)
+│   ├── manual.md               # User manual
+│   ├── test-setup.md           # Test scenarios
+│   └── release-notes.md        # Release changelog
 └── scripts/
-└── build-snap.[sh|ps1]     # 构建脚本（见 @05-build-deploy.md）
+    └── dev-loop.[sh|ps1]       # Dev loop script (see @05-build-deploy.md)
 ```
 
-## 初始化流程
+## Initialization Steps
 
-### Step 1: 创建目录
+### Step 1: Create Directories
+
 ```bash
 mkdir -p {app-name}/{snap,src,schema,build-info,docs,scripts}
 ```
 
-### Step 2: 选择模板
-根据语言复制对应模板：
+### Step 2: Select Templates
 
-Python 项目:
-- 主文件: @templates/provider-template.py → src/main.py
-- 配置: @templates/snapcraft-python.yaml → snap/snapcraft.yaml
+Copy the templates for your language:
 
-C++ 项目:
-- 主文件: @templates/provider-template-cpp.cpp → src/main.cpp
-- 构建: @templates/CMakeLists.txt → CMakeLists.txt
-- 配置: @templates/snapcraft-cpp.yaml → snap/snapcraft.yaml
+**Python project:**
+- Entry point: @templates/provider-template.py → src/main.py
+- Snap config: @templates/snapcraft-python.yaml → snap/snapcraft.yaml
 
-C++ 依赖安装（在 App Build Environment 中）:
+**C++ project:**
+- Entry point: @templates/provider-template-cpp.cpp → src/main.cpp
+- Build file: @templates/CMakeLists.txt → CMakeLists.txt
+- Snap config: @templates/snapcraft-cpp.yaml → snap/snapcraft.yaml
+
+C++ dependency installation (inside App Build Environment):
 ```bash
-# 添加 Bosch APT 仓库
+# Add Bosch APT repository
 curl -s https://nexus.boschrexroth.com/repository/apt-hosted/gpg.key | sudo apt-key add -
 echo "deb https://nexus.boschrexroth.com/repository/apt-hosted focal main" \
   | sudo tee /etc/apt/sources.list.d/bosch.list
@@ -54,12 +57,12 @@ sudo apt update
 sudo apt install libctrlx-datalayer-dev libflatbuffers-dev flatbuffers-compiler -y
 ```
 
-.NET 项目:
-- 主文件: @templates/provider-template-csharp.cs → src/Program.cs
-- 配置: @templates/snapcraft-csharp.yaml → snap/snapcraft.yaml
-- 额外创建: `{app}.csproj`（见下方模板）
+**.NET project:**
+- Entry point: @templates/provider-template-csharp.cs → src/Program.cs
+- Snap config: @templates/snapcraft-csharp.yaml → snap/snapcraft.yaml
+- Also create: `{app}.csproj` (see template below)
 
-.NET csproj 模板:
+.NET csproj template:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -77,7 +80,7 @@ sudo apt install libctrlx-datalayer-dev libflatbuffers-dev flatbuffers-compiler 
 </Project>
 ```
 
-NuGet.Config（放在项目根目录）:
+NuGet.Config (place in project root):
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -89,31 +92,35 @@ NuGet.Config（放在项目根目录）:
 </configuration>
 ```
 
-## Step 3: 填充元数据
-编辑以下文件的占位符：
-- snap/snapcraft.yaml: 修改 {app-name}, {company}, 版本号
-- build-info/package-manifest.json: 更新 socket 路径、许可证配置
-- docs/manual.md: 填写应用功能、安装步骤
+### Step 3: Fill in Metadata
 
-## 初始化后步骤
-完成目录创建后，指导用户：
+Edit the placeholders in:
+- `snap/snapcraft.yaml`: Replace `{app-name}`, `{company}`, and version number
+- `build-info/package-manifest.json`: Update socket path and license config
+- `docs/manual.md`: Describe application functionality and installation steps
 
-验证 Snap 配置:
+## Post-Initialization Steps
+
+After creating the directories, guide the user through:
+
+Validate Snap configuration:
 ```bash
 cd {app-name}
-snapcraft lint  # 检查语法
+snapcraft lint  # Check syntax
 ```
 
-安装依赖（本地开发）:
+Install dependencies (local development):
 ```bash
 pip install ctrlx-datalayer flatbuffers  # Python
 ```
 
-## 首次构建测试:
-参考 @05-build-deploy.md 的 "快速构建测试" 章节
+## First Build Test
 
-## 常见错误预防
-❌ 错误: 忘记创建 build-info/ 目录 → 导致反向代理失效
-❌ 错误: 使用 TCP 端口而非 Unix Socket → 审核失败
-❌ 错误: 忽略 docs/ 目录 → 合规性检查不通过
-✅ 正确: 严格按照模板填写所有占位符
+Refer to the "Fast Dev Loop" section in @05-build-deploy.md.
+
+## Common Mistakes to Avoid
+
+❌ Forgetting to create the `build-info/` directory → reverse proxy will not work
+❌ Using TCP ports instead of Unix Sockets → will fail compliance review
+❌ Skipping the `docs/` directory → compliance check will not pass
+✅ Always fill in all placeholders using the templates as the reference
