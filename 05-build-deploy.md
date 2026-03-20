@@ -1,10 +1,10 @@
-# 构建与部署指南
+# Build and Deploy Guide
 
-## 快速开发循环（推荐日常使用）
+## Fast Dev Loop (Recommended for Daily Use)
 
-> **一条命令完成**：构建 → 上传 → 验证运行状态
+> **One command does it all**: Build → Upload → Verify
 
-### 前置配置（仅首次）
+### Initial Setup (One-Time)
 
 ```bash
 # Linux/macOS/WSL
@@ -25,20 +25,20 @@ $env:CTRLX_PASS = "your-password"
 Copy-Item templates\dev-loop.ps1 scripts\dev-loop.ps1
 ```
 
-### 每次迭代
+### Each Iteration
 
 ```bash
-# Linux/WSL — 构建 amd64（用于 COREvirtual）
+# Linux/WSL — build amd64 (for COREvirtual)
 ./scripts/dev-loop.sh --arch amd64
 
 # Windows PowerShell
 .\scripts\dev-loop.ps1 -Arch amd64
 
-# ARM64（物理 ctrlX CORE）
+# ARM64 (for physical ctrlX CORE)
 ./scripts/dev-loop.sh --arch arm64
 ```
 
-### 脚本输出示例
+### Example Script Output
 
 ```
 ▶ [1/5] Building snap for amd64...
@@ -58,113 +58,116 @@ Copy-Item templates\dev-loop.ps1 scripts\dev-loop.ps1
   App 'ctrlx-myco-myapp' is Running on 192.168.1.1
 ```
 
-### ctrlX REST API 认证说明
+### ctrlX REST API Authentication
 
 ```bash
-# 手动获取 token（调试用）
+# Manually obtain a token (for debugging)
 curl -sk -X POST \
   "https://${CTRLX_HOST}/identity-manager/api/v1/auth/token" \
   -H "Content-Type: application/json" \
   -d '{"name":"admin","password":"your-password"}'
-# 返回: {"access_token": "eyJ...", "token_type": "Bearer"}
+# Returns: {"access_token": "eyJ...", "token_type": "Bearer"}
 ```
 
 ---
 
-## 构建策略选择
+## Build Strategy Options
 
-### 策略 A: Docker 构建（Windows/macOS/ Linux 通用）
+### Strategy A: Docker Build (Cross-Platform)
 
-**适用场景**:
-- 开发团队使用 Windows
-- 快速原型验证
-- 无需安装 Ubuntu VM
+**When to use:**
+- Development team uses Windows
+- Rapid prototyping
+- No Ubuntu VM required
 
-**前置条件**:
-- Docker Desktop 运行中
-- 项目目录可访问
+**Prerequisites:**
+- Docker Desktop running
+- Project directory accessible
 
-**构建命令**:
+**Build commands:**
 
 ```bash
-# x86_64 架构（用于 COREvirtual）
+# x86_64 (for COREvirtual)
 docker run --rm -v "${PWD}:/build" -w /build \
   -e SNAPCRAFT_BUILD_ENVIRONMENT=host \
   ghcr.io/canonical/snapcraft:8_core22 \
   snapcraft --target-arch=amd64
 
-# ARM64 架构（用于物理 ctrlX CORE）
+# ARM64 (for physical ctrlX CORE)
 docker run --rm -v "${PWD}:/build" -w /build \
   -e SNAPCRAFT_BUILD_ENVIRONMENT=host \
   ghcr.io/canonical/snapcraft:8_core22 \
   snapcraft --target-arch=arm64
 ```
 
-输出: ctrlx-{company}-{app}_{version}_{arch}.snap 在 snap/ 目录
+Output: `ctrlx-{company}-{app}_{version}_{arch}.snap` in the `snap/` directory
 
-### 策略 B: App Build Environment（官方推荐）
-**适用场景**:
-- 生产环境构建
-- 需要原生库链接
-- 符合 Bosch 官方流程
+### Strategy B: App Build Environment (Official)
 
-步骤:
-- 在 ctrlX WORKS 中启动 App Build Environment（QEMU VM）
-- 等待 VM 启动（端口 10022）
-- SSH 连接:
+**When to use:**
+- Production builds
+- Native library linking required
+- Follows official Bosch build process
+
+Steps:
+- Launch App Build Environment (QEMU VM) in ctrlX WORKS
+- Wait for VM to boot (port 10022)
+- SSH in:
 ```bash
 ssh boschrexroth@localhost -p 10022
-# 默认密码: boschrexroth
+# Default password: boschrexroth
 ```
-- 在 VM 中:
+- Inside the VM:
 ```bash
 sudo apt update
 sudo apt install libctrlx-datalayer-dev -y
 cd /path/to/project
 snapcraft
 ```
-- 复制结果到宿主机:
+- Copy output to host:
 ```bash
 scp -P 10022 boschrexroth@localhost:~/project/*.snap .
 ```
-## 部署流程
 
-### 本地测试（COREvirtual）
-1. 上传 Snap:
-- 打开 ctrlX OS Web 界面（https://localhost）
-- Settings → App Management → Install
-- 启用 "Allow installation from unknown source"
-- 上传 .snap 文件
-2. 验证运行:
-- 检查应用状态为 "Running"
-- 查看 Logs: Diagnostics → Logbook
-- 验证 Data Layer 节点: Data Layer → Browser
-3. 功能测试:
-- 使用 Postman 或 SDK 客户端测试节点读写
-- 验证 Flatbuffers 序列化正确性
+## Deployment
 
-### 生产部署（物理 ctrlX CORE）
-1. 签名验证:
-- 确保 Snap 已通过 Bosch Rexroth 签名
-- 未签名 Snap 只能用于开发模式
-2. 安装:
-- 通过 ctrlX OS 界面上传
-- 或命令行: snap install ctrlx-{company}-{app}.snap --dangerous（开发模式）
-3. 配置:
-- 设置环境变量（如需要）
-- 配置许可证（如启用）
+### Local Testing (COREvirtual)
 
+1. Upload Snap:
+   - Open ctrlX OS web interface (https://localhost)
+   - Settings → App Management → Install
+   - Enable "Allow installation from unknown source"
+   - Upload the .snap file
+2. Verify operation:
+   - Confirm app state shows "Running"
+   - View logs: Diagnostics → Logbook
+   - Verify Data Layer nodes: Data Layer → Browser
+3. Functional testing:
+   - Test node read/write with Postman or SDK client
+   - Verify Flatbuffers serialization
 
-## 故障排除
+### Production Deployment (Physical ctrlX CORE)
 
-| 构建错误                           | 解决                                               |
-| ------------------------------ | ------------------------------------------------ |
-| `snapcraft: command not found` | 在 VM 中运行 `sudo snap install snapcraft --classic` |
-| `Failed to pull source`        | 检查网络连接，或添加 `--use-lxd` 参数                        |
-| `Architecture mismatch`        | 确保使用 `--target-arch=arm64` 用于物理设备                |
+1. Signature verification:
+   - Ensure the Snap has been signed by Bosch Rexroth
+   - Unsigned Snaps can only be used in developer mode
+2. Installation:
+   - Upload via ctrlX OS interface
+   - Or command line: `snap install ctrlx-{company}-{app}.snap --dangerous` (developer mode)
+3. Configuration:
+   - Set environment variables if needed
+   - Configure license if enabled
 
-| 部署错误            | 解决                                 |
-| --------------- | ---------------------------------- |
-| App 无法启动        | 检查 `snapcraft.yaml` 的 `command` 路径 |
-| Data Layer 连接失败 | 确认 `ctrlx-datalayer` plug 已连接      |
-| 权限拒绝            | 检查 Unix Socket 路径权限为 0600          |
+## Troubleshooting
+
+| Build Error | Fix |
+|---|---|
+| `snapcraft: command not found` | Run `sudo snap install snapcraft --classic` inside VM |
+| `Failed to pull source` | Check network connection, or add `--use-lxd` flag |
+| `Architecture mismatch` | Make sure to use `--target-arch=arm64` for physical devices |
+
+| Deploy Error | Fix |
+|---|---|
+| App fails to start | Check the `command` path in `snapcraft.yaml` |
+| Data Layer connection fails | Verify the `ctrlx-datalayer` plug is connected |
+| Permission denied | Check that the Unix Socket path has 0600 permissions |
